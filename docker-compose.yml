@@ -1,0 +1,42 @@
+version: '2.4'
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    links:
+      - rabbitmq
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      app2:
+        condition: service_started
+    scale: 1
+  app2:
+    build:
+      context: .
+      dockerfile: Dockerfile.app2
+    links:
+      - rabbitmq
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    scale: 1
+  rabbitmq:
+    image: rabbitmq:3.7-management
+    healthcheck:
+      timeout: 5s
+      interval: 5s
+      retries: 5
+      test:
+        - "CMD"
+        - "rabbitmqctl"
+        - "status"
+    expose:
+      - '15672'
+      - '5762'
+    logging:
+      driver: none
+    ports:
+      - 5762:5762
+      - 15672:15672
